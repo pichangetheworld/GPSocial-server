@@ -24,7 +24,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', routes);
 app.use('/users', users);
 
-
 // test twitter feed get
 app.get('/twitterTest', function (req, res) {
     res.type('application/json');
@@ -235,5 +234,8 @@ app.use(function(err, req, res, next) {
     });
 });
 
+conosole.log("Web service has started. Listening on port 8080.");
+
+app.listen(8080);
 
 module.exports = app;
