@@ -187,7 +187,7 @@ app.get('/profileTest', function (req, res) {
     res.type('application/json');
     res.json({
         "username": "Joe Smith",
-        "twitter_handle":"joesmith",
+        "twitter_handle":"@joesmith",
         "profile_img_url_tw": "http://png-3.findicons.com/files/icons/1580/devine_icons_part_2/128/account_and_control.png",
         "feed": [
             {
