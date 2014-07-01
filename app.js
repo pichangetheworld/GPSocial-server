@@ -75,7 +75,7 @@ app.get('/twitterTest', function (req, res) {
             "lang": "en"
         },
         {
-            "created_at": "Sun Feb 09 8:55:34 +0000 2014",
+            "created_at": "Tue Jun 25 8:55:34 +0000 2014",
             "id": 432656548536401932,
             "id_str": "432656548536401932",
             "text": "Wow this game is so good! #WorldCup",
@@ -96,7 +96,7 @@ app.get('/twitterTest', function (req, res) {
             "lang": "en"
         },
         {
-            "created_at": "Sun Feb 09 8:50:34 +0000 2014",
+            "created_at": "Tue Jun 25 8:50:34 +0000 2014",
             "id": 432656548536401931,
             "id_str": "432656548536401931",
             "text": "I wonder how long it took to organize all of this...",
@@ -162,13 +162,55 @@ app.get('/twitterTest', function (req, res) {
             "created_at": "Tue Jun 25 07:25:34 +0000 2014",
             "id": 432656548536401921,
             "id_str": "432656548536401921",
-            "text": "Wow this game is so good! #WorldCup",
+            "text": "OMG YELLOW CARD?! WTF someone fire that ref",
             "source": "web",
             "user": {
                 "id": 2244994946,
                 "id_str": "2244994946",
                 "name": "John Doe",
                 "screen_name": "TheRealJohnDoe",
+                "location": "Internet",
+                "description": "Just another dude!",
+                "url": "https://t.co/66w26cua1O",
+                "created_at": "Sat Dec 19 04:35:55 +0000 2013",
+                "lang": "en",
+                "profile_image_url": "http://pbs.twimg.com/profile_images/431949550836662272/A6Ck-0Gx_normal.png",
+                "profile_image_url_https": "https://pbs.twimg.com/profile_images/431949550836662272/A6Ck-0Gx_normal.png"
+            },
+            "lang": "en"
+        },
+        {
+            "created_at": "Tue Jun 25 07:35:34 +0000 2014",
+            "id": 432656548536401941,
+            "id_str": "432656548536401941",
+            "text": "GOALLLLLLL #ArrivederciItalia",
+            "source": "web",
+            "user": {
+                "id": 2244994946,
+                "id_str": "2244994946",
+                "name": "John Doe",
+                "screen_name": "TheRealJohnDoe",
+                "location": "Internet",
+                "description": "Just another dude!",
+                "url": "https://t.co/66w26cua1O",
+                "created_at": "Sat Dec 19 04:35:55 +0000 2013",
+                "lang": "en",
+                "profile_image_url": "http://pbs.twimg.com/profile_images/431949550836662272/A6Ck-0Gx_normal.png",
+                "profile_image_url_https": "https://pbs.twimg.com/profile_images/431949550836662272/A6Ck-0Gx_normal.png"
+            },
+            "lang": "en"
+        },
+        {
+            "created_at": "Tue Jun 25 07:15:34 +0000 2014",
+            "id": 432656548536401971,
+            "id_str": "432656548536401971",
+            "text": "How is that not a yellow card!? BITING!?",
+            "source": "web",
+            "user": {
+                "id": 2244994960,
+                "id_str": "2244994960",
+                "name": "Jane Though",
+                "screen_name": "TheRealJaneThough",
                 "location": "Internet",
                 "description": "Just another dude!",
                 "url": "https://t.co/66w26cua1O",
