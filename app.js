@@ -10,6 +10,22 @@ var users = require('./routes/users');
 
 var app = express();
 
+var mysql = require('mysql');
+
+var connection = mysql.createConnection({
+    host :'localhost',
+    user :   'root',
+    password : 'bobobo123',
+    database : 'gpsocialdb'
+});
+
+connection.connect(function(err) {
+   if (err) {
+       throw err;
+   }
+   connection.query("INSERT INTO users(TwitterId, FacebookId) VALUES ('TestTwitter', 'TestFacebook')");
+});
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
