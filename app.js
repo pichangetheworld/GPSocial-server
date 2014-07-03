@@ -10,6 +10,9 @@ var users = require('./routes/users');
 
 var app = express();
 
+var https  = require('https');
+
+//Database
 var mysql = require('mysql');
 
 var connection = mysql.createConnection({
@@ -19,12 +22,14 @@ var connection = mysql.createConnection({
     database : 'gpsocialdb'
 });
 
-connection.connect(function(err) {
-   if (err) {
-       throw err;
-   }
-   connection.query("INSERT INTO users(TwitterId, FacebookId) VALUES ('TestTwitter', 'TestFacebook')");
-});
+var OAuth = require('OAuth');
+
+//connection.connect(function(err) {
+//   if (err) {
+//       throw err;
+//   }
+//   connection.query("INSERT INTO users(TwitterId, FacebookId) VALUES ('TestTwitter', 'TestFacebook')");
+//});
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -241,6 +246,7 @@ app.get('/twitterTest', function (req, res) {
     ]);
 });
 
+//Profile endpoint test
 app.get('/profileTest', function (req, res) {
     res.type('application/json');
     res.json({
@@ -271,6 +277,55 @@ app.get('/profileTest', function (req, res) {
             }
         ]
     });
+});
+
+//twitter authentication test
+//TODO: Parse request JSON, store in DB, return true/false depending if the auth passed is valid
+app.post('/authenticate_twitter', function(req, res) {
+        res.send(req.body['test']);
+});
+
+
+app.get('/twitterTest2', function(req, res){
+    var options = {
+        hostname: "api.twitter.com",
+        port: 443,
+        path: '/1.1/statuses/home_timeline.json'
+    };
+
+    var oauth = new OAuth.OAuth(
+        'https://api.twitter.com/oauth/request_token',
+        'https://api.twitter.com/oauth/access_token',
+        'RDfBstGQ5U8zMxP5dLcF6ugI4',
+        'qJRiOLJDP2QqoWpv0rt7aAoCKBGmdQLd4J5FUeM7OVlx7qYyfO',
+        '1.0A',
+        null,
+        'HMAC-SHA1'
+    );
+
+    oauth.get(
+        'https://api.twitter.com/1.1/statuses/home_timeline.json?count=1',
+        '2554578817-beuETu3otLqNvSSS37LuKFi9ws6WZObwEZ21sJl',
+        '4saIDze32pE8MU1dps8HqUKve6gDeNxlQbWrdjZNEz6MA',
+        function(e, data, oRes) {
+            if (e) {
+                console.error(e);
+            }
+            console.log(data);
+        }
+    );
+
+//    https.get(options, function(getRes) {
+//        console.log('STATUS: ' + getRes.statusCode);
+//        console.log('HEADERS: ' + JSON.stringify(getRes.headers));
+//        getRes.setEncoding('utf8');
+//        getRes.on('data', function (chunk) {
+//           res.json(chunk);
+//        });
+//    }).on('error', function(e) {
+//        console.log("Got error: " + e.message);
+//    });
+
 });
 
 /// catch 404 and forward to error handler
