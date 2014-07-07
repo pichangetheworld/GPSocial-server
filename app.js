@@ -24,12 +24,12 @@ var connection = mysql.createConnection({
 
 var OAuth = require('OAuth');
 
-//connection.connect(function(err) {
-//   if (err) {
-//       throw err;
-//   }
-//   connection.query("INSERT INTO users(TwitterId, FacebookId) VALUES ('TestTwitter', 'TestFacebook')");
-//});
+connection.connect(function(err) {
+   if (err) {
+       throw err;
+   }
+   console.log('Connected to gpsocialdb');
+});
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -282,11 +282,54 @@ app.get('/profileTest', function (req, res) {
 //twitter authentication test
 //TODO: Parse request JSON, store in DB, return true/false depending if the auth passed is valid
 app.post('/authenticate_twitter', function(req, res) {
-        res.send(req.body['test']);
+    //TODO, validate so that the request body sends all these
+    //TODO: Make GeoLocation optional parameters
+    var twitterId = req.body['userId'],
+        screenName = req.body['screenName'],
+        token = req.body['token'],
+        tokenSecret = req.body['tokenSecret'],
+        twQuery,
+        uQuery;
+
+    console.log (twitterId + " " + screenName + " " + token + " " + tokenSecret + JSON.stringify(req.body));
+    //TODO: Replace queries with better ones
+    //TODO: Take measures against SQL Injection
+    twQuery = "REPLACE INTO TwitterAuth(TwitterId, OAuthToken, OAuthSecret)" +
+        "VALUES ('" + twitterId + "', '" + token + "', '" + tokenSecret + "');";
+
+    uQuery = "REPLACE INTO users(TwitterId)" +
+    "VALUES ('" + twitterId + "');";
+
+    connection.query(twQuery, function(twErr, twRows, twFields) {
+        if (twErr) {
+            res.json({success : "false"});
+            throw twErr;
+        }
+
+        connection.query(uQuery, function (uErr, uRows, uFields) {
+            if (uErr) {
+                res.json({success : "false"});
+                throw uErr;
+            }
+
+            connection.query("SELECT * FROM users WHERE TwitterId = '" + twitterId + "' LIMIT 1;", function (err, rows, fields) {
+                if (err) {
+                    throw err;
+                }
+                var userId = rows[0].UserId;
+                console.log ("UserId" + userId);
+                res.json({success : "true", userId: userId});
+            });
+
+        });
+    });
+
 });
 
 
 app.get('/twitterTest2', function(req, res){
+    var userId = req.query.id;
+
     var options = {
         hostname: "api.twitter.com",
         port: 443,
