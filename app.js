@@ -24,6 +24,9 @@ var connection = mysql.createConnection({
 
 var OAuth = require('OAuth');
 
+var CONSUMER_KEY = 'RDfBstGQ5U8zMxP5dLcF6ugI4';
+var CONSUMER_SECRET = 'qJRiOLJDP2QqoWpv0rt7aAoCKBGmdQLd4J5FUeM7OVlx7qYyfO';
+
 connection.connect(function(err) {
    if (err) {
        throw err;
@@ -284,6 +287,7 @@ app.get('/profileTest', function (req, res) {
 app.post('/authenticate_twitter', function(req, res) {
     //TODO, validate so that the request body sends all these
     //TODO: Make GeoLocation optional parameters
+	//TODO: Add a preliminary call to TWITTER verify_credentials
     var twitterId = req.body['userId'],
         screenName = req.body['screenName'],
         token = req.body['token'],
@@ -328,48 +332,115 @@ app.post('/authenticate_twitter', function(req, res) {
 
 
 app.get('/twitterTest2', function(req, res){
-    var userId = req.query.id;
+    var userId = req.query.id,
+		NUM_OF_TWEETS = 25;
 
-    var options = {
-        hostname: "api.twitter.com",
-        port: 443,
-        path: '/1.1/statuses/home_timeline.json'
-    };
+	connection.query("SELECT * FROM TwitterAuth ta INNER JOIN users u ON u.TwitterId = ta.TwitterId WHERE u.UserId = '" + userId + "' LIMIT 1", function (err, rows, fields) {
+		if (err) {
+			throw err;
+		}
+		
+		var oauth,
+			token = rows[0].OAuthToken,
+			tokenSecret = rows[0].OAuthSecret;
 
-    var oauth = new OAuth.OAuth(
-        'https://api.twitter.com/oauth/request_token',
-        'https://api.twitter.com/oauth/access_token',
-        'RDfBstGQ5U8zMxP5dLcF6ugI4',
-        'qJRiOLJDP2QqoWpv0rt7aAoCKBGmdQLd4J5FUeM7OVlx7qYyfO',
-        '1.0A',
-        null,
-        'HMAC-SHA1'
-    );
+		oauth = new OAuth.OAuth(
+			'https://api.twitter.com/oauth/request_token',
+			'https://api.twitter.com/oauth/access_token',
+			CONSUMER_KEY,
+			CONSUMER_SECRET,
+			'1.0A',
+			null,
+			'HMAC-SHA1'
+		);
 
-    oauth.get(
-        'https://api.twitter.com/1.1/statuses/home_timeline.json?count=1',
-        '2554578817-beuETu3otLqNvSSS37LuKFi9ws6WZObwEZ21sJl',
-        '4saIDze32pE8MU1dps8HqUKve6gDeNxlQbWrdjZNEz6MA',
-        function(e, data, oRes) {
-            if (e) {
-                console.error(e);
-            }
-            console.log(data);
-        }
-    );
-
-//    https.get(options, function(getRes) {
-//        console.log('STATUS: ' + getRes.statusCode);
-//        console.log('HEADERS: ' + JSON.stringify(getRes.headers));
-//        getRes.setEncoding('utf8');
-//        getRes.on('data', function (chunk) {
-//           res.json(chunk);
-//        });
-//    }).on('error', function(e) {
-//        console.log("Got error: " + e.message);
-//    });
-
+		oauth.get(
+			'https://api.twitter.com/1.1/statuses/home_timeline.json?count=' + NUM_OF_TWEETS,
+			token,
+			tokenSecret,
+			function(e, data, oRes) {
+				if (e) {
+					console.error(e);
+				}
+				res.type("application/json");
+				res.send(data);
+			}
+		);
+	}); 
 });
+
+app.get('/profileTest2', function(req, res) {
+    var userId = req.query.id,
+		result,
+		userTwitterInfo,
+		userTweets,
+		i,
+		iMax;
+
+	//TODO: Modularize the following query
+	connection.query("SELECT * FROM TwitterAuth ta INNER JOIN users u ON u.TwitterId = ta.TwitterId WHERE u.UserId = '" + userId + "' LIMIT 1", function (err, rows, fields) {
+		if (err) {
+			throw err;
+		}
+		
+		var options,
+			oauth,
+			token = rows[0].OAuthToken,
+			tokenSecret = rows[0].OAuthSecret,
+			twitterId = rows[0].TwitterId;
+
+		oauth = new OAuth.OAuth(
+			'https://api.twitter.com/oauth/request_token',
+			'https://api.twitter.com/oauth/access_token',
+			CONSUMER_KEY,
+			CONSUMER_SECRET,
+			'1.0A',
+			null,
+			'HMAC-SHA1'
+		);
+
+		oauth.get(
+			'https://api.twitter.com/1.1/users/show.json?user_id=' + twitterId,
+			token,
+			tokenSecret,
+			function(e, data, oRes) {
+				if (e) {
+					console.error(e);
+				}
+				console.log("DATA : " + data);
+				userTwitterInfo = data;
+			}
+		);
+		
+		oauth.get(
+			'https://api.twitter.com/1.1/statuses/user_timeline.json?user_id=' + twitterId,
+			token,
+			tokenSecret,
+			function(e, data, oRes) {
+				if (e) {
+					console.error(e);
+				}
+				userTweets = data;
+			}
+		);
+		
+		console.log(userTwitterInfo);
+		console.log(userTweets);
+		
+		for (i = 0, iMax = userTweets.length; i < userTweets; ++i) {
+			userTweets[i]["feed_source"] = 1;
+		}
+		
+		result = {
+			name : userTwitterInfo['name'],
+			twitter_handle : "@" + userTwitterInfo['screen_name'],
+			profile_img_url_tw : userTwitterInfo["profile_image_url"],
+			feed : userTweets
+		};
+		
+		res.send(result);
+	});
+})
 
 /// catch 404 and forward to error handler
 app.use(function(req, res, next) {
