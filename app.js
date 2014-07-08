@@ -403,42 +403,39 @@ app.get('/profileTest2', function(req, res) {
 			'https://api.twitter.com/1.1/users/show.json?user_id=' + twitterId,
 			token,
 			tokenSecret,
-			function(e, data, oRes) {
+			function(e, userData, oRes) {
 				if (e) {
 					console.error(e);
 				}
-				console.log("DATA : " + data);
-				userTwitterInfo = data;
+                userTwitterInfo = JSON.parse(userData);
+
+                oauth.get(
+                    'https://api.twitter.com/1.1/statuses/user_timeline.json?user_id=' + twitterId,
+                    token,
+                    tokenSecret,
+                    function(e, tweetData, oRes) {
+                        if (e) {
+                            console.error(e);
+                        }
+                        userTweets = JSON.parse(tweetData);
+
+                        for (i = 0, iMax = userTweets.length; i < iMax; ++i) {
+                            console.log(userTweets[i]);
+                            userTweets[i].feed_source = 1;
+                        }
+
+                        result = {
+                            name : userTwitterInfo['name'],
+                            twitter_handle : "@" + userTwitterInfo['screen_name'],
+                            profile_img_url_tw : userTwitterInfo["profile_image_url"],
+                            feed : userTweets
+                        };
+
+                        res.send(result);
+                    }
+                );
 			}
 		);
-		
-		oauth.get(
-			'https://api.twitter.com/1.1/statuses/user_timeline.json?user_id=' + twitterId,
-			token,
-			tokenSecret,
-			function(e, data, oRes) {
-				if (e) {
-					console.error(e);
-				}
-				userTweets = data;
-			}
-		);
-		
-		console.log(userTwitterInfo);
-		console.log(userTweets);
-		
-		for (i = 0, iMax = userTweets.length; i < userTweets; ++i) {
-			userTweets[i]["feed_source"] = 1;
-		}
-		
-		result = {
-			name : userTwitterInfo['name'],
-			twitter_handle : "@" + userTwitterInfo['screen_name'],
-			profile_img_url_tw : userTwitterInfo["profile_image_url"],
-			feed : userTweets
-		};
-		
-		res.send(result);
 	});
 })
 
