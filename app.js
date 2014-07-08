@@ -298,7 +298,7 @@ app.post('/authenticate_twitter', function(req, res) {
     console.log (twitterId + " " + screenName + " " + token + " " + tokenSecret + JSON.stringify(req.body));
     //TODO: Replace queries with better ones
     //TODO: Take measures against SQL Injection
-    twQuery = "REPLACE INTO TwitterAuth(TwitterId, OAuthToken, OAuthSecret)" +
+    twQuery = "REPLACE INTO twitterauth(TwitterId, OAuthToken, OAuthSecret)" +
         "VALUES ('" + twitterId + "', '" + token + "', '" + tokenSecret + "');";
 
     uQuery = "REPLACE INTO users(TwitterId)" +
@@ -335,7 +335,7 @@ app.get('/twitterTest2', function(req, res){
     var userId = req.query.id,
 		NUM_OF_TWEETS = 25;
 
-	connection.query("SELECT * FROM TwitterAuth ta INNER JOIN users u ON u.TwitterId = ta.TwitterId WHERE u.UserId = '" + userId + "' LIMIT 1", function (err, rows, fields) {
+	connection.query("SELECT * FROM twitterauth ta INNER JOIN users u ON u.TwitterId = ta.TwitterId WHERE u.UserId = '" + userId + "' LIMIT 1", function (err, rows, fields) {
 		if (err) {
 			throw err;
 		}
@@ -378,7 +378,7 @@ app.get('/profileTest2', function(req, res) {
 		iMax;
 
 	//TODO: Modularize the following query
-	connection.query("SELECT * FROM TwitterAuth ta INNER JOIN users u ON u.TwitterId = ta.TwitterId WHERE u.UserId = '" + userId + "' LIMIT 1", function (err, rows, fields) {
+	connection.query("SELECT * FROM twitterauth ta INNER JOIN users u ON u.TwitterId = ta.TwitterId WHERE u.UserId = '" + userId + "' LIMIT 1", function (err, rows, fields) {
 		if (err) {
 			throw err;
 		}
