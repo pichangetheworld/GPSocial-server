@@ -22,7 +22,7 @@ var connection = mysql.createConnection({
     database : 'gpsocialdb'
 });
 
-var OAuth = require('OAuth');
+var OAuth = require('oauth');
 
 var CONSUMER_KEY = 'RDfBstGQ5U8zMxP5dLcF6ugI4';
 var CONSUMER_SECRET = 'qJRiOLJDP2QqoWpv0rt7aAoCKBGmdQLd4J5FUeM7OVlx7qYyfO';
