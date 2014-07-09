@@ -300,7 +300,8 @@ app.post('/authenticate_twitter', function(req, res) {
     //TODO: Take measures against SQL Injection
     twQuery = "INSERT INTO twitterauth(TwitterId, OAuthToken, OAuthSecret)" +
         "VALUES ('" + twitterId + "', '" + token + "', '" + tokenSecret + "')" +
-        "ON DUPLICATE KEY UPDATE;";
+        "ON DUPLICATE KEY UPDATE " +
+        "OAuthToken=VALUES(OAuthToken), OAuthSecret=VALUES(OAuthSecret);";
 
     uQuery = "INSERT IGNORE INTO users(TwitterId)" +
     "VALUES ('" + twitterId + "');";
