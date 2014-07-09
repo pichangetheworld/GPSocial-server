@@ -409,7 +409,6 @@ app.get('/profileTest2', function(req, res) {
 				if (e) {
 					console.error(e);
 				}
-                console.log(userData);
                 userTwitterInfo = JSON.parse(userData);
 
                 oauth.get(
