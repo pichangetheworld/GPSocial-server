@@ -333,7 +333,7 @@ app.post('/authenticate_twitter', function(req, res) {
 });
 
 
-app.get('/twitterTest2', function(req, res){
+app.get('/news_feed', function(req, res){
     var userId = req.query.id,
 		NUM_OF_TWEETS = 25;
 
@@ -371,7 +371,7 @@ app.get('/twitterTest2', function(req, res){
 	}); 
 });
 
-app.get('/profileTest2', function(req, res) {
+app.get('/profile', function(req, res) {
     var userId = req.query.id,
 		result,
 		userTwitterInfo,
