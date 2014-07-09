@@ -298,8 +298,9 @@ app.post('/authenticate_twitter', function(req, res) {
     console.log (twitterId + " " + screenName + " " + token + " " + tokenSecret + JSON.stringify(req.body));
     //TODO: Replace queries with better ones
     //TODO: Take measures against SQL Injection
-    twQuery = "REPLACE INTO twitterauth(TwitterId, OAuthToken, OAuthSecret)" +
-        "VALUES ('" + twitterId + "', '" + token + "', '" + tokenSecret + "');";
+    twQuery = "INSERT INTO twitterauth(TwitterId, OAuthToken, OAuthSecret)" +
+        "VALUES ('" + twitterId + "', '" + token + "', '" + tokenSecret + "')" +
+        "ON DUPLICATE KEY UPDATE;";
 
     uQuery = "INSERT IGNORE INTO users(TwitterId)" +
     "VALUES ('" + twitterId + "');";
@@ -407,6 +408,7 @@ app.get('/profileTest2', function(req, res) {
 				if (e) {
 					console.error(e);
 				}
+                console.log(userData);
                 userTwitterInfo = JSON.parse(userData);
 
                 oauth.get(
