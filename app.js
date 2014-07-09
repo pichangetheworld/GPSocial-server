@@ -301,7 +301,7 @@ app.post('/authenticate_twitter', function(req, res) {
     twQuery = "REPLACE INTO twitterauth(TwitterId, OAuthToken, OAuthSecret)" +
         "VALUES ('" + twitterId + "', '" + token + "', '" + tokenSecret + "');";
 
-    uQuery = "REPLACE INTO users(TwitterId)" +
+    uQuery = "INSERT IGNORE INTO users(TwitterId)" +
     "VALUES ('" + twitterId + "');";
 
     connection.query(twQuery, function(twErr, twRows, twFields) {
@@ -430,7 +430,7 @@ app.get('/profileTest2', function(req, res) {
                             profile_img_url_tw : userTwitterInfo["profile_image_url"],
                             feed : userTweets
                         };
-
+                        res.type('application/json');
                         res.send(result);
                     }
                 );
