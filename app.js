@@ -423,13 +423,13 @@ app.get('/profileTest2', function(req, res) {
                             console.log(userTweets[i]);
                             userTweets[i].feed_source = 1;
                         }
-
                         result = {
                             name : userTwitterInfo['name'],
                             twitter_handle : "@" + userTwitterInfo['screen_name'],
                             profile_img_url_tw : userTwitterInfo["profile_image_url"],
                             feed : userTweets
                         };
+                        console.log(result);
                         res.type('application/json');
                         res.send(result);
                     }
