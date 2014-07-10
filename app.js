@@ -335,6 +335,8 @@ app.post('/authenticate_twitter', function(req, res) {
 
 app.get('/news_feed', function(req, res){
     var userId = req.query.id,
+        geolng = req.query.lng,
+        geolat = req.query.lat,
 		NUM_OF_TWEETS = 25;
 
 	connection.query("SELECT * FROM twitterauth ta INNER JOIN users u ON u.TwitterId = ta.TwitterId WHERE u.UserId = '" + userId + "' LIMIT 1", function (err, rows, fields) {
@@ -368,18 +370,34 @@ app.get('/news_feed', function(req, res){
 				res.send(data);
 			}
 		);
-	}); 
+	});
+
+    //update database with geolocation
+    if (typeof geolat !== "undefined" && typeof geolng !== "undefined") {
+        connection.query("UPDATE users " +
+                "SET GeoLat= '" + geolat + "', " +
+                "GeoLng= '" + geolng + "', " +
+                "GeoTime= concat(current_date(), ' ', TIME(GeoTime)) " +
+                "WHERE UserId = " + userId + ";",
+            function (err, rows, fields) {
+                if (err) {
+                    throw err;
+                }
+            });
+    }
 });
 
 app.get('/profile', function(req, res) {
     var userId = req.query.id,
+        geolng = req.query.lng,
+        geolat = req.query.lat,
 		result,
 		userTwitterInfo,
 		userTweets,
 		i,
 		iMax;
 
-	//TODO: Modularize the following query
+    //TODO: Modularize the following query
 	connection.query("SELECT * FROM twitterauth ta INNER JOIN users u ON u.TwitterId = ta.TwitterId WHERE u.UserId = '" + userId + "' LIMIT 1", function (err, rows, fields) {
 		if (err) {
 			throw err;
@@ -422,7 +440,6 @@ app.get('/profile', function(req, res) {
                         userTweets = JSON.parse(tweetData);
 
                         for (i = 0, iMax = userTweets.length; i < iMax; ++i) {
-                            console.log(userTweets[i]);
                             userTweets[i].feed_source = 1;
                         }
                         result = {
@@ -439,6 +456,20 @@ app.get('/profile', function(req, res) {
 			}
 		);
 	});
+
+    //update database with geolocation
+    if (typeof geolat !== "undefined" && typeof geolng !== "undefined") {
+        connection.query("UPDATE users " +
+            "SET GeoLat= " + geolat + ", " +
+            "GeoLng= " + geolng + ", " +
+            "GeoTime= concat(current_date(), ' ', TIME(GeoTime)) " +
+            "WHERE UserId = " + userId + ";",
+        function (err, rows, fields) {
+            if (err) {
+                throw err;
+            }
+        });
+    }
 })
 
 /// catch 404 and forward to error handler
