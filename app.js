@@ -377,7 +377,7 @@ app.get('/news_feed', function(req, res){
         connection.query("UPDATE users " +
                 "SET GeoLat= '" + geolat + "', " +
                 "GeoLng= '" + geolng + "', " +
-                "GeoTime= concat(current_date(), ' ', TIME(GeoTime)) " +
+                "GeoTime= NOW() " +
                 "WHERE UserId = " + userId + ";",
             function (err, rows, fields) {
                 if (err) {
@@ -462,7 +462,7 @@ app.get('/profile', function(req, res) {
         connection.query("UPDATE users " +
             "SET GeoLat= " + geolat + ", " +
             "GeoLng= " + geolng + ", " +
-            "GeoTime= concat(current_date(), ' ', TIME(GeoTime)) " +
+            "GeoTime= NOW() " +
             "WHERE UserId = " + userId + ";",
         function (err, rows, fields) {
             if (err) {
