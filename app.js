@@ -582,19 +582,19 @@ app.get('/profile', function(req, res) {
                                             var obj = JSON.parse(output);
                                             fbResult = obj;
                                             console.log(JSON.stringify(obj));
-                                            //aggregates result
-                                            result = {
-                                                name: (typeof twResult !== "null") ? twResult['name'] : (typeof fbResult !== "null") ? fbResult["name"] : "",
-                                                twitter_handle: (typeof twResult !== "null") ? twResult['twitter_handle'] : "",
-                                                profile_img_url_tw: (typeof twResult !== "null") ? twResult["profile_image_url_tw"] : "",
-                                                feed: (typeof twResult !== "null") ? userTweets : []
-                                            };
-
-                                            res.send(result);
                                         });
                                     });
 
                                 }
+
+                                result = {
+                                    name: (typeof twResult !== "null") ? twResult['name'] : (typeof fbResult !== "null") ? fbResult["name"] : "",
+                                    twitter_handle: (typeof twResult !== "null") ? twResult['twitter_handle'] : "",
+                                    profile_img_url_tw: (typeof twResult !== "null") ? twResult["profile_image_url_tw"] : "",
+                                    feed: (typeof twResult !== "null") ? userTweets : []
+                                };
+
+                                res.send(result);
 
                             });
                         }
