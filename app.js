@@ -581,23 +581,21 @@ app.get('/profile', function(req, res) {
                                         httpRes.on('end', function () {
                                             var obj = JSON.parse(output);
                                             fbResult = obj;
+                                            //aggregates result
+                                            result = {
+                                                name: (typeof twResult !== "null") ? twResult['name'] : (typeof fbResult !== "null") ? fbResult["name"] : "",
+                                                twitter_handle: (typeof twResult !== "null") ? twResult['twitter_handle'] : "",
+                                                profile_img_url_tw: (typeof twResult !== "null") ? twResult["profile_image_url_tw"] : "",
+                                                feed: (typeof twResult !== "null") ? userTweets : []
+                                            };
+
+                                            res.send(result);
                                         });
                                     });
 
                                 }
 
                             });
-
-                            //aggregates result
-                            console.log(JSON.stringify(twResult));
-                            result = {
-                                name: (typeof twResult !== "null") ? twResult['name'] : (typeof fbResult !== "null") ? fbResult["name"] : "",
-                                twitter_handle: (typeof twResult !== "null") ? twResult['twitter_handle'] : "",
-                                profile_img_url_tw: (typeof twResult !== "null") ? twResult["profile_image_url"] : "",
-                                feed: (typeof twResult !== "null") ? userTweets : []
-                            };
-
-                            res.send(result);
                         }
                     );
                 }
