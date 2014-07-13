@@ -292,13 +292,12 @@ app.post('/authenticate_twitter', function(req, res) {
     //TODO: Make GeoLocation optional parameters
 	//TODO: Add a preliminary call to TWITTER verify_credentials
     var twitterId = req.body['userId'],
-        screenName = req.body['screenName'],
         token = req.body['token'],
         tokenSecret = req.body['tokenSecret'],
         twQuery,
         uQuery;
 
-    console.log (twitterId + " " + screenName + " " + token + " " + tokenSecret + JSON.stringify(req.body));
+    console.log (twitterId + " " + " " + token + " " + tokenSecret + JSON.stringify(req.body));
     //TODO: Replace queries with better ones
     //TODO: Take measures against SQL Injection
     twQuery = "INSERT INTO twitterauth(TwitterId, OAuthToken, OAuthSecret)" +
@@ -327,7 +326,79 @@ app.post('/authenticate_twitter', function(req, res) {
                 }
                 var userId = rows[0].UserId;
                 console.log ("UserId" + userId);
-                res.json({success : "true", userId: userId});
+				
+				//TODO: Better to make a socialMedia table with the associated bit values then use that table to dynamically select and get connectedFlag from users
+				connection.query("select ((CASE WHEN TwitterId IS NULL THEN 0 ELSE 1 END) + " +
+					"(CASE WHEN FacebookId IS NULL THEN 0 ELSE 2 END)) AS connectedFlag FROM users WHERE UserId = " + userId + " LIMIT 1",
+				function (cErr, cRows, cFields) {
+					if (cErr) {
+						throw cErr;
+					}
+					var connectedFlag = cRows[0].connectedFlag;
+					res.json({success : "true", userId: userId, connectedFlag: connectedFlag});
+				});
+				
+            });
+
+        });
+    });
+
+});
+
+//twitter authentication test
+//TODO: Parse request JSON, store in DB, return true/false depending if the auth passed is valid
+app.post('/authenticate_facebook', function(req, res) {
+    //TODO, validate so that the request body sends all these
+    //TODO: Make GeoLocation optional parameters
+	//TODO: Add a preliminary call to TWITTER verify_credentials
+	//TODO: FB tokens expire
+    var facebookId = req.body['userId'],
+        token = req.body['token'],
+        tokenSecret = req.body['tokenSecret'],
+        fbQuery,
+        uQuery;
+
+    console.log (facebookId + " " + token + " " + tokenSecret + JSON.stringify(req.body));
+    //TODO: Replace queries with better ones
+    //TODO: Take measures against SQL Injection
+    fbQuery = "INSERT INTO facebookauth(FacebookId, OAuthToken, OAuthSecret)" +
+        "VALUES ('" + facebookId + "', '" + token + "', '" + tokenSecret + "')" +
+        "ON DUPLICATE KEY UPDATE " +
+        "OAuthToken=VALUES(OAuthToken), OAuthSecret=VALUES(OAuthSecret);";
+
+    uQuery = "INSERT IGNORE INTO users(FacebookId)" +
+    "VALUES ('" + facebookId + "');";
+
+    connection.query(fbQuery, function(fbErr, fbRows, fbfields) {
+        if (fbErr) {
+            res.json({success : "false"});
+            throw fbErr;
+        }
+
+        connection.query(uQuery, function (uErr, uRows, uFields) {
+            if (uErr) {
+                res.json({success : "false"});
+                throw uErr;
+            }
+
+            connection.query("SELECT * FROM users WHERE FacebookId = '" + facebookId + "' LIMIT 1;", function (err, rows, fields) {
+                if (err) {
+                    throw err;
+                }
+                var userId = rows[0].UserId;
+                console.log ("UserId" + userId);
+				
+				//TODO: Better to make a socialMedia table with the associated bit values then use that table to dynamically select and get connectedFlag from users
+				connection.query("select ((CASE WHEN TwitterId IS NULL THEN 0 ELSE 1 END) + " +
+					"(CASE WHEN FacebookId IS NULL THEN 0 ELSE 2 END)) AS connectedFlag FROM users WHERE UserId = " + userId + " LIMIT 1",
+				function (cErr, cRows, cFields) {
+					if (cErr) {
+						throw cErr;
+					}
+					var connectedFlag = cRows[0].connectedFlag;
+					res.json({success : "true", userId: userId, connectedFlag: connectedFlag});
+				});
+				
             });
 
         });
@@ -390,6 +461,30 @@ app.get('/news_feed', function(req, res){
     }
 });
 
+//FacebookTest
+app.get('/facebookProfileTest', function(req, res) {
+	var userId = req.query.id,
+		options,
+		token;
+	
+	connection.query("SELECT * FROM facebookauth ta INNER JOIN users u ON u.FacebookId = ta.FacebookId WHERE u.UserId = '" + userId + "' LIMIT 1", function (err, rows, fields) {
+		token = rows[0].OAuthToken;
+		
+		https.get("https://graph.facebook.com/v2.0/me?access_token=" + token, function(httpRes) {
+			var output = '';
+			httpRes.on('data', function (chunk) {
+				output += chunk;
+			});
+
+			httpRes.on('end', function() {
+				var obj = JSON.parse(output);
+				res.send(obj);
+			});
+		});
+	});
+	
+});
+
 app.get('/profile', function(req, res) {
     var userId = req.query.id,
         geolng = req.query.lng,
@@ -406,8 +501,7 @@ app.get('/profile', function(req, res) {
 			throw err;
 		}
 		
-		var options,
-			oauth,
+		var oauth,
 			token = rows[0].OAuthToken,
 			tokenSecret = rows[0].OAuthSecret,
 			twitterId = rows[0].TwitterId;
