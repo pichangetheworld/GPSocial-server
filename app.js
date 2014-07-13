@@ -581,6 +581,7 @@ app.get('/profile', function(req, res) {
                                         httpRes.on('end', function () {
                                             var obj = JSON.parse(output);
                                             fbResult = obj;
+                                            console.log(JSON.stringify(obj));
                                             //aggregates result
                                             result = {
                                                 name: (typeof twResult !== "null") ? twResult['name'] : (typeof fbResult !== "null") ? fbResult["name"] : "",
@@ -602,6 +603,42 @@ app.get('/profile', function(req, res) {
             );
         }
 	});
+
+    if (twResult === null) {
+        //facebook
+        connection.query("SELECT * FROM facebookauth fb INNER JOIN users u ON u.FacebookId = fb.FacebookId WHERE u.UserId = '" + userId + "' LIMIT 1", function (err, rows, fields) {
+            if (err) {
+                throw err;
+            }
+
+            if (rows.length > 0) {
+
+                var token = rows[0].OAuthToken;
+                https.get("https://graph.facebook.com/v2.0/me?access_token=" + token, function (httpRes) {
+                    var output = '';
+                    httpRes.on('data', function (chunk) {
+                        output += chunk;
+                    });
+
+                    httpRes.on('end', function () {
+                        var obj = JSON.parse(output);
+                        fbResult = obj;
+                        console.log(JSON.stringify(obj));
+                        //aggregates result
+                        result = {
+                            name: (typeof fbResult !== "null") ? fbResult["name"] : "",
+                            twitter_handle: "",
+                            profile_img_url_tw: "",
+                            feed: []
+                        };
+
+                        res.send(result);
+                    });
+                });
+
+            }
+        });
+    }
 
     //update database with geolocation
     if (typeof geolat !== "undefined" && typeof geolng !== "undefined") {
