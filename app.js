@@ -295,7 +295,10 @@ app.post('/authenticate_twitter', function(req, res) {
         token = req.body['token'],
         tokenSecret = req.body['tokenSecret'],
         twQuery,
-        uQuery;
+        uQuery,
+        userId = req.body["id"],
+        geolng = req.body["lng"],
+        geolat = req.body["lat"];
 
     console.log (twitterId + " " + " " + token + " " + tokenSecret + JSON.stringify(req.body));
     //TODO: Replace queries with better ones
@@ -356,7 +359,10 @@ app.post('/authenticate_facebook', function(req, res) {
         token = req.body['token'],
         tokenSecret = req.body['tokenSecret'],
         fbQuery,
-        uQuery;
+        uQuery,
+        userId = req.body["id"],
+        geolng = req.body["lng"],
+        geolat = req.body["lat"];
 
     console.log (facebookId + " " + token + " " + tokenSecret + JSON.stringify(req.body));
     //TODO: Replace queries with better ones
@@ -417,33 +423,36 @@ app.get('/news_feed', function(req, res){
 		if (err) {
 			throw err;
 		}
-		
-		var oauth,
-			token = rows[0].OAuthToken,
-			tokenSecret = rows[0].OAuthSecret;
 
-		oauth = new OAuth.OAuth(
-			'https://api.twitter.com/oauth/request_token',
-			'https://api.twitter.com/oauth/access_token',
-			CONSUMER_KEY,
-			CONSUMER_SECRET,
-			'1.0A',
-			null,
-			'HMAC-SHA1'
-		);
+        if (rows.length > 0) {
 
-		oauth.get(
-			'https://api.twitter.com/1.1/statuses/home_timeline.json?count=' + NUM_OF_TWEETS,
-			token,
-			tokenSecret,
-			function(e, data, oRes) {
-				if (e) {
-					console.error(e);
-				}
-				res.type("application/json");
-				res.send(data);
-			}
-		);
+            var oauth,
+                token = rows[0].OAuthToken,
+                tokenSecret = rows[0].OAuthSecret;
+
+            oauth = new OAuth.OAuth(
+                'https://api.twitter.com/oauth/request_token',
+                'https://api.twitter.com/oauth/access_token',
+                CONSUMER_KEY,
+                CONSUMER_SECRET,
+                '1.0A',
+                null,
+                'HMAC-SHA1'
+            );
+
+            oauth.get(
+                    'https://api.twitter.com/1.1/statuses/home_timeline.json?count=' + NUM_OF_TWEETS,
+                token,
+                tokenSecret,
+                function (e, data, oRes) {
+                    if (e) {
+                        console.error(e);
+                    }
+                    res.type("application/json");
+                    res.send(data);
+                }
+            );
+        }
 	});
 
     //update database with geolocation
@@ -489,69 +498,111 @@ app.get('/profile', function(req, res) {
     var userId = req.query.id,
         geolng = req.query.lng,
         geolat = req.query.lat,
-		result,
+		twResult = null,
 		userTwitterInfo,
 		userTweets,
+        fbResult = null,
 		i,
-		iMax;
+		iMax,
+        result;
+
+    res.type('application/json');
 
     //TODO: Modularize the following query
+    //TODO: Custom select query to get all social media id's then dynamically build queries from it
 	connection.query("SELECT * FROM twitterauth ta INNER JOIN users u ON u.TwitterId = ta.TwitterId WHERE u.UserId = '" + userId + "' LIMIT 1", function (err, rows, fields) {
 		if (err) {
 			throw err;
 		}
-		
-		var oauth,
-			token = rows[0].OAuthToken,
-			tokenSecret = rows[0].OAuthSecret,
-			twitterId = rows[0].TwitterId;
 
-		oauth = new OAuth.OAuth(
-			'https://api.twitter.com/oauth/request_token',
-			'https://api.twitter.com/oauth/access_token',
-			CONSUMER_KEY,
-			CONSUMER_SECRET,
-			'1.0A',
-			null,
-			'HMAC-SHA1'
-		);
+        if (rows.length > 0) {
 
-		oauth.get(
-			'https://api.twitter.com/1.1/users/show.json?user_id=' + twitterId,
-			token,
-			tokenSecret,
-			function(e, userData, oRes) {
-				if (e) {
-					console.error(e);
-				}
-                userTwitterInfo = JSON.parse(userData);
+            var oauth,
+                token = rows[0].OAuthToken,
+                tokenSecret = rows[0].OAuthSecret,
+                twitterId = rows[0].TwitterId;
 
-                oauth.get(
-                    'https://api.twitter.com/1.1/statuses/user_timeline.json?user_id=' + twitterId,
-                    token,
-                    tokenSecret,
-                    function(e, tweetData, oRes) {
-                        if (e) {
-                            console.error(e);
-                        }
-                        userTweets = JSON.parse(tweetData);
+            oauth = new OAuth.OAuth(
+                'https://api.twitter.com/oauth/request_token',
+                'https://api.twitter.com/oauth/access_token',
+                CONSUMER_KEY,
+                CONSUMER_SECRET,
+                '1.0A',
+                null,
+                'HMAC-SHA1'
+            );
 
-                        for (i = 0, iMax = userTweets.length; i < iMax; ++i) {
-                            userTweets[i].feed_source = 1;
-                        }
-                        result = {
-                            name : userTwitterInfo['name'],
-                            twitter_handle : "@" + userTwitterInfo['screen_name'],
-                            profile_img_url_tw : userTwitterInfo["profile_image_url"],
-                            feed : userTweets
-                        };
-                        console.log(result);
-                        res.type('application/json');
-                        res.send(result);
+            oauth.get(
+                    'https://api.twitter.com/1.1/users/show.json?user_id=' + twitterId,
+                token,
+                tokenSecret,
+                function (e, userData, oRes) {
+                    if (e) {
+                        console.error(e);
                     }
-                );
-			}
-		);
+                    userTwitterInfo = JSON.parse(userData);
+
+                    oauth.get(
+                            'https://api.twitter.com/1.1/statuses/user_timeline.json?user_id=' + twitterId,
+                        token,
+                        tokenSecret,
+                        function (e, tweetData, oRes) {
+                            if (e) {
+                                console.error(e);
+                            }
+                            userTweets = JSON.parse(tweetData);
+
+                            for (i = 0, iMax = userTweets.length; i < iMax; ++i) {
+                                userTweets[i].feed_source = 1;
+                            }
+                            twResult = {
+                                name: userTwitterInfo['name'],
+                                twitter_handle: "@" + userTwitterInfo['screen_name'],
+                                profile_img_url_tw: userTwitterInfo["profile_image_url"],
+                                feed: userTweets
+                            };
+
+                            //TODO: Modularize
+                            //facebook
+                            connection.query("SELECT * FROM facebookauth fb INNER JOIN users u ON u.FacebookId = fb.FacebookId WHERE u.UserId = '" + userId + "' LIMIT 1", function (err, rows, fields) {
+                                if (err) {
+                                    throw err;
+                                }
+
+                                if (rows.length > 0) {
+
+                                    var token = rows[0].OAuthToken;
+                                    https.get("https://graph.facebook.com/v2.0/me?access_token=" + token, function (httpRes) {
+                                        var output = '';
+                                        httpRes.on('data', function (chunk) {
+                                            output += chunk;
+                                        });
+
+                                        httpRes.on('end', function () {
+                                            var obj = JSON.parse(output);
+                                            fbResult = obj;
+                                        });
+                                    });
+
+                                }
+
+                            });
+
+                            //aggregates result
+                            console.log(JSON.stringify(twResult));
+                            result = {
+                                name: (typeof twResult !== "null") ? twResult['name'] : (typeof fbResult !== "null") ? fbResult["name"] : "",
+                                twitter_handle: (typeof twResult !== "null") ? twResult['twitter_handle'] : "",
+                                profile_img_url_tw: (typeof twResult !== "null") ? twResult["profile_image_url"] : "",
+                                feed: (typeof twResult !== "null") ? userTweets : []
+                            };
+
+                            res.send(result);
+                        }
+                    );
+                }
+            );
+        }
 	});
 
     //update database with geolocation
