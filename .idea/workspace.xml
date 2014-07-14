@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="BookmarkManager">
-    <bookmark url="file://$PROJECT_DIR$/app.js" line="455" mnemonic="9" />
+    <bookmark url="file://$PROJECT_DIR$/app.js" line="456" mnemonic="9" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2b8d91da-e78d-449e-abf5-c3c0d45b67b7" name="Default" comment="" />
@@ -49,8 +49,8 @@
       <file leaf-file-name="app.js" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.71524286" vertical-offset="9705" max-vertical-offset="11883">
-              <caret line="596" column="49" selection-start-line="596" selection-start-column="49" selection-end-line="596" selection-end-column="49" />
+            <state vertical-scroll-proportion="0.8291457" vertical-offset="10062" max-vertical-offset="12529">
+              <caret line="621" column="38" selection-start-line="621" selection-start-column="38" selection-end-line="621" selection-end-column="38" />
               <folding />
             </state>
           </provider>
@@ -703,8 +703,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/app.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.71524286" vertical-offset="9705" max-vertical-offset="11883">
-          <caret line="596" column="49" selection-start-line="596" selection-start-column="49" selection-end-line="596" selection-end-column="49" />
+        <state vertical-scroll-proportion="0.8291457" vertical-offset="10062" max-vertical-offset="12529">
+          <caret line="621" column="38" selection-start-line="621" selection-start-column="38" selection-end-line="621" selection-end-column="38" />
           <folding />
         </state>
       </provider>

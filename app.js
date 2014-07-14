@@ -27,6 +27,16 @@ var connection = mysql.createConnection({
 
 var OAuth = require('oauth');
 
+var oauth = new OAuth.OAuth(
+    'https://api.twitter.com/oauth/request_token',
+    'https://api.twitter.com/oauth/access_token',
+    CONSUMER_KEY,
+    CONSUMER_SECRET,
+    '1.0A',
+    null,
+    'HMAC-SHA1'
+);
+
 var CONSUMER_KEY = 'RDfBstGQ5U8zMxP5dLcF6ugI4';
 var CONSUMER_SECRET = 'qJRiOLJDP2QqoWpv0rt7aAoCKBGmdQLd4J5FUeM7OVlx7qYyfO';
 
@@ -426,19 +436,10 @@ app.get('/news_feed', function(req, res){
 
         if (rows.length > 0) {
 
-            var oauth,
-                token = rows[0].OAuthToken,
+            var token = rows[0].OAuthToken,
                 tokenSecret = rows[0].OAuthSecret;
 
-            oauth = new OAuth.OAuth(
-                'https://api.twitter.com/oauth/request_token',
-                'https://api.twitter.com/oauth/access_token',
-                CONSUMER_KEY,
-                CONSUMER_SECRET,
-                '1.0A',
-                null,
-                'HMAC-SHA1'
-            );
+
 
             oauth.get(
                     'https://api.twitter.com/1.1/statuses/home_timeline.json?count=' + NUM_OF_TWEETS,
@@ -517,20 +518,9 @@ app.get('/profile', function(req, res) {
 
         if (rows.length > 0) {
 
-            var oauth,
-                token = rows[0].OAuthToken,
+            var token = rows[0].OAuthToken,
                 tokenSecret = rows[0].OAuthSecret,
                 twitterId = rows[0].TwitterId;
-
-            oauth = new OAuth.OAuth(
-                'https://api.twitter.com/oauth/request_token',
-                'https://api.twitter.com/oauth/access_token',
-                CONSUMER_KEY,
-                CONSUMER_SECRET,
-                '1.0A',
-                null,
-                'HMAC-SHA1'
-            );
 
             oauth.get(
                     'https://api.twitter.com/1.1/users/show.json?user_id=' + twitterId,
@@ -591,7 +581,7 @@ app.get('/profile', function(req, res) {
                                     name: (typeof twResult !== "null") ? twResult['name'] : (typeof fbResult !== "null") ? fbResult["name"] : "",
                                     twitter_handle: (typeof twResult !== "null") ? twResult['twitter_handle'] : "",
                                     profile_img_url_tw: (typeof twResult !== "null") ? twResult["profile_image_url_tw"] : "",
-                                    feed: (typeof twResult !== "null") ? userTweets : []
+                                    feed: (typeof twResult !== "null") ? twResult["feed"] : null
                                 };
 
                                 res.send(result);
@@ -629,7 +619,7 @@ app.get('/profile', function(req, res) {
                             name: (typeof fbResult !== "null") ? fbResult["name"] : "",
                             twitter_handle: "",
                             profile_img_url_tw: "",
-                            feed: []
+                            feed: null
                         };
 
                         res.send(result);
@@ -653,8 +643,56 @@ app.get('/profile', function(req, res) {
             }
         });
     }
-})
+});
 
+app.post('/post_message', function(req, res) {
+    var userId = req.body['id'],
+        geolng = req.query.lng,
+        geolat = req.query.lat,
+        message = req.body['message'],
+        source = req.body['source'],
+        encodedMessage,
+        token,
+        tokenSecret;
+
+    res.type('application/json');
+
+    console.log("HI " + JSON.stringify(req.body));
+    if (typeof message !== "undefined") {
+
+        console.log("HELLO");
+        encodedMessage = "status=" + encodeURIComponent(message);
+
+        //TWITTER
+        if (source === '1') {
+            connection.query("SELECT * FROM twitterauth ta INNER JOIN users u ON u.TwitterId = ta.TwitterId WHERE u.UserId = '" + userId + "' LIMIT 1", function (err, rows, fields) {
+
+                if (rows.length > 0) {
+
+                    token = rows[0].OAuthToken;
+                    tokenSecret = rows[0].OAuthSecret;
+                    console.log("HERE");
+                    oauth.post(
+                        'https://api.twitter.com/1.1/statuses/update.json',
+                        token,
+                        tokenSecret,
+                        encodedMessage,
+                        'text/plain',
+                        function (e, data, oRes) {
+                            if (e) {
+                                console.error(e);
+                            }
+                            res.send(data);
+                        }
+                    );
+
+                }
+            });
+        }
+
+    }
+
+});
 /// catch 404 and forward to error handler
 app.use(function(req, res, next) {
     var err = new Error('Not Found');
