@@ -21,7 +21,7 @@ var mysql = require('mysql');
 var connection = mysql.createConnection({
     host :'localhost',
     user :   'root',
-    password : 'bobobo123',
+    password : 'gpsocial',
     database : 'gpsocialdb'
 });
 
@@ -306,9 +306,9 @@ app.post('/authenticate_twitter', function(req, res) {
         tokenSecret = req.body['tokenSecret'],
         twQuery,
         uQuery,
-        userId = req.body["id"],
-        geolng = req.body["lng"],
-        geolat = req.body["lat"];
+        userId = req.query["id"],
+        geolng = req.query["lng"],
+        geolat = req.query["lat"];
 
     console.log (twitterId + " " + " " + token + " " + tokenSecret + JSON.stringify(req.body));
     //TODO: Replace queries with better ones
@@ -664,9 +664,9 @@ app.post('/post_message', function(req, res) {
         encodedMessage = "status=" + encodeURIComponent(message);
 
         //TWITTER
-        if (source === '1') {
+        if (parseInt(source) === 1) {
             connection.query("SELECT * FROM twitterauth ta INNER JOIN users u ON u.TwitterId = ta.TwitterId WHERE u.UserId = '" + userId + "' LIMIT 1", function (err, rows, fields) {
-
+                console.log("LENGTH: " + rows.length);
                 if (rows.length > 0) {
 
                     token = rows[0].OAuthToken;
