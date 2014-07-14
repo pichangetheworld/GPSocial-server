@@ -581,7 +581,7 @@ app.get('/profile', function(req, res) {
                                     name: (typeof twResult !== "null") ? twResult['name'] : (typeof fbResult !== "null") ? fbResult["name"] : "",
                                     twitter_handle: (typeof twResult !== "null") ? twResult['twitter_handle'] : "",
                                     profile_img_url_tw: (typeof twResult !== "null") ? twResult["profile_image_url_tw"] : "",
-                                    feed: (typeof twResult !== "null") ? twResult["feed"] : null
+                                    feed: (typeof twResult !== "null") ? twResult["feed"] : []
                                 };
 
                                 res.send(result);
@@ -619,7 +619,7 @@ app.get('/profile', function(req, res) {
                             name: (typeof fbResult !== "null") ? fbResult["name"] : "",
                             twitter_handle: "",
                             profile_img_url_tw: "",
-                            feed: null
+                            feed: []
                         };
 
                         res.send(result);
@@ -661,7 +661,7 @@ app.post('/post_message', function(req, res) {
     if (typeof message !== "undefined") {
 
         console.log("HELLO");
-        encodedMessage = "status=" + encodeURIComponent(message);
+        encodedMessage = encodeURIComponent(message);
 
         //TWITTER
         if (parseInt(source) === 1) {
@@ -673,11 +673,11 @@ app.post('/post_message', function(req, res) {
                     tokenSecret = rows[0].OAuthSecret;
                     console.log("HERE");
                     oauth.post(
-                        'https://api.twitter.com/1.1/statuses/update.json',
+                        'https://api.twitter.com/1.1/statuses/update.json?status=' + encodedMessage,
                         token,
                         tokenSecret,
                         encodedMessage,
-                        'text/plain',
+                        'application/x-www-form-urlencoded',
                         function (e, data, oRes) {
                             if (e) {
                                 console.error(e);
