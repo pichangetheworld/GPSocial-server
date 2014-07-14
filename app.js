@@ -552,6 +552,8 @@ app.get('/profile', function(req, res) {
                                 feed: userTweets
                             };
 
+                            console.log(userTwitterInfo["profile_image_url"]);
+
                             //TODO: Modularize
                             //facebook
                             connection.query("SELECT * FROM facebookauth fb INNER JOIN users u ON u.FacebookId = fb.FacebookId WHERE u.UserId = '" + userId + "' LIMIT 1", function (err, rows, fields) {
@@ -580,9 +582,11 @@ app.get('/profile', function(req, res) {
                                 result = {
                                     name: (typeof twResult !== "null") ? twResult['name'] : (typeof fbResult !== "null") ? fbResult["name"] : "",
                                     twitter_handle: (typeof twResult !== "null") ? twResult['twitter_handle'] : "",
-                                    profile_img_url_tw: (typeof twResult !== "null") ? twResult["profile_image_url_tw"] : "",
+                                    profile_img_url_tw: (typeof twResult !== "null") ? twResult["profile_img_url_tw"] : "",
                                     feed: (typeof twResult !== "null") ? twResult["feed"] : []
                                 };
+
+                                console.log(result);
 
                                 res.send(result);
 
