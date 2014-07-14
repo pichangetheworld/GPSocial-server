@@ -27,6 +27,9 @@ var connection = mysql.createConnection({
 
 var OAuth = require('oauth');
 
+var CONSUMER_KEY = 'rziw2sr1LdJCSHa2KiKte7cOA';
+var CONSUMER_SECRET = 'RdZqDHYsacJKqfFbStKDUDuE8Z0rNd72nXBEe4TFfS4g6ahEKO';
+
 var oauth = new OAuth.OAuth(
     'https://api.twitter.com/oauth/request_token',
     'https://api.twitter.com/oauth/access_token',
@@ -36,9 +39,6 @@ var oauth = new OAuth.OAuth(
     null,
     'HMAC-SHA1'
 );
-
-var CONSUMER_KEY = 'RDfBstGQ5U8zMxP5dLcF6ugI4';
-var CONSUMER_SECRET = 'qJRiOLJDP2QqoWpv0rt7aAoCKBGmdQLd4J5FUeM7OVlx7qYyfO';
 
 connection.connect(function(err) {
    if (err) {
