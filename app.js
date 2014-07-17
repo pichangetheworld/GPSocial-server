@@ -700,7 +700,7 @@ app.get('/users_near_me', function (req, res) {
 	
 	res.type('application/json');
 	
-	res.json([
+	res.send([
 					{
 						"id": 1,
 						"user_name":"Fred",
