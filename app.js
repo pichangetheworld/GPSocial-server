@@ -495,6 +495,30 @@ app.get('/facebookProfileTest', function(req, res) {
 	
 });
 
+
+app.get('/users_near_me', function (req, res) {
+	var userId = req.query.id;
+	
+	res.type('application/json');
+	
+	res.send([
+					{
+					"id": 1,
+					"user_name": "Fred",
+					"lng": "43.470241",
+					"lat": "-80.540792"
+					},
+					{
+					"id": 3,
+					"user_name": "Tom",
+					"lng": "43.472803",
+					"lat": "-80.535299"
+					}
+	]);
+
+});
+
+
 app.get('/profile', function(req, res) {
     var userId = req.query.id,
         geolng = req.query.lng,
@@ -695,27 +719,7 @@ app.post('/post_message', function(req, res) {
 
     }
 
-app.get('/users_near_me', function (req, res) {
-	var userId = req.query.id;
-	
-	res.type('application/json');
-	
-	res.send([
-					{
-						"id": 1,
-						"user_name": "Fred",
-						"lng": "43.470241",
-						"lat": "-80.540792"
-					},
-					{
-						"id": 3,
-						"user_name": "Tom",
-						"lng": "43.472803",
-						"lat": "-80.535299"
-					}
-	]);
 
-});
 	
 });
 /// catch 404 and forward to error handler
