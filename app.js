@@ -703,15 +703,15 @@ app.get('/users_near_me', function (req, res) {
 	res.send([
 					{
 						"id": 1,
-						"user_name":"Fred",
-						"lng":43.470241,
-						"lat":-80.540792
+						"user_name": "Fred",
+						"lng": "43.470241",
+						"lat": "-80.540792"
 					},
 					{
 						"id": 3,
-						"user_name":"Tom",
-						"lng":43.472803,
-						"lat":-80.535299
+						"user_name": "Tom",
+						"lng": "43.472803",
+						"lat": "-80.535299"
 					}
 	]);
 
