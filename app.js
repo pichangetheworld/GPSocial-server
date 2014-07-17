@@ -680,8 +680,7 @@ app.post('/post_message', function(req, res) {
                         'https://api.twitter.com/1.1/statuses/update.json?status=' + encodedMessage,
                         token,
                         tokenSecret,
-                        encodedMessage,
-                        'application/x-www-form-urlencoded',
+                        {"status": encodedMessage},
                         function (e, data, oRes) {
                             if (e) {
                                 console.error(e);
