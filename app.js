@@ -695,6 +695,28 @@ app.post('/post_message', function(req, res) {
 
     }
 
+app.get('/users_near_me', function (req, res) {
+	var userId = req.query.id;
+	
+	res.type('application/json');
+	
+	res.json([
+					{
+						"id": 1,
+						"user_name":"Fred",
+						"lng":43.470241,
+						"lat":-80.540792
+					},
+					{
+						"id": 3,
+						"user_name":"Tom",
+						"lng":43.472803,
+						"lat":-80.535299
+					}
+	]);
+
+});
+	
 });
 /// catch 404 and forward to error handler
 app.use(function(req, res, next) {
