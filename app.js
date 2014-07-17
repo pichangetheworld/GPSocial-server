@@ -495,6 +495,29 @@ app.get('/facebookProfileTest', function(req, res) {
 	
 });
 
+//FacebookTest
+app.get('/facebookNewsFeedTest', function(req, res) {
+	var userId = req.query.id,
+		options,
+		token;
+	
+	connection.query("SELECT * FROM facebookauth ta INNER JOIN users u ON u.FacebookId = ta.FacebookId WHERE u.UserId = '" + userId + "' LIMIT 1", function (err, rows, fields) {
+		token = rows[0].OAuthToken;
+		
+		https.get("https://graph.facebook.com/v2.0/me/home?access_token=" + token, function(httpRes) {
+			var output = '';
+			httpRes.on('data', function (chunk) {
+				output += chunk;
+			});
+
+			httpRes.on('end', function() {
+				var obj = JSON.parse(output);
+				res.send(obj);
+			});
+		});
+	});
+	
+});
 
 app.get('/users_near_me', function (req, res) {
 	var userId = req.query.id;
