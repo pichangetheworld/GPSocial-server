@@ -624,7 +624,7 @@ app.get('/profile', function(req, res) {
                                         });
                                     });
 									
-									https.get("https://graph.facebook.com/v2.0/me/picture?access_token=" + token, function (httpRes) {
+									https.get("https://graph.facebook.com/v2.0/me/picture?redirect=0&access_token=" + token, function (httpRes) {
                                         var output = '';
                                         httpRes.on('data', function (chunk) {
                                             output += chunk;
@@ -687,7 +687,7 @@ app.get('/profile', function(req, res) {
                         };
                     });
 					
-					https.get("https://graph.facebook.com/v2.0/me/picture?access_token=" + token, function (httpRes) {
+					https.get("https://graph.facebook.com/v2.0/me/picture?redirect=0&access_token=" + token, function (httpRes) {
 						var output = '';
 						httpRes.on('data', function (chunk) {
 							output += chunk;
