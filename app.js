@@ -623,6 +623,19 @@ app.get('/profile', function(req, res) {
                                             console.log(JSON.stringify(obj));
                                         });
                                     });
+									
+									https.get("https://graph.facebook.com/v2.0/me/picture?access_token=" + token, function (httpRes) {
+                                        var output = '';
+                                        httpRes.on('data', function (chunk) {
+                                            output += chunk;
+                                        });
+
+                                        httpRes.on('end', function () {
+                                            var obj = JSON.parse(output);
+                                            fbResult["profile_img_url"] = obj;
+                                            console.log(JSON.stringify(obj));
+                                        });
+                                    });
 
                                 }
 
@@ -672,9 +685,22 @@ app.get('/profile', function(req, res) {
                             profile_img_url_tw: "",
                             feed: []
                         };
-
-                        res.send(result);
                     });
+					
+					https.get("https://graph.facebook.com/v2.0/me/picture?access_token=" + token, function (httpRes) {
+						var output = '';
+						httpRes.on('data', function (chunk) {
+							output += chunk;
+						});
+
+						httpRes.on('end', function () {
+							var obj = JSON.parse(output);
+							result["profile_img_url"] = obj;
+							
+							res.send(result);
+						});
+					});
+					
                 });
 
             }
