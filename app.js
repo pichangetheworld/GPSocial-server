@@ -15,6 +15,10 @@ var app = express();
 
 var https  = require('https');
 
+//FeedData
+var FeedData = require('./FeedData');
+
+
 //Database
 var mysql = require('mysql');
 
@@ -427,7 +431,14 @@ app.get('/news_feed', function(req, res){
     var userId = req.query.id,
         geolng = req.query.lng,
         geolat = req.query.lat,
-		NUM_OF_TWEETS = 25;
+		NUM_OF_TWEETS = 25,
+		twitterFeed = [],
+		twitterFeedData,
+		i,
+		iMax,
+		jsonData;
+		
+	res.type("application/json");
 
 	connection.query("SELECT * FROM twitterauth ta INNER JOIN users u ON u.TwitterId = ta.TwitterId WHERE u.UserId = '" + userId + "' LIMIT 1", function (err, rows, fields) {
 		if (err) {
@@ -449,8 +460,22 @@ app.get('/news_feed', function(req, res){
                     if (e) {
                         console.error(e);
                     }
-                    res.type("application/json");
-                    res.send(data);
+                    
+					jsonData = JSON.parse(data);
+					
+					for (i = 0, iMax = jsonData.length; i < iMax; ++i) {
+						twitterFeedData = Object.create(FeedData);
+						twitterFeedData['feed_source'] = 1;
+						twitterFeedData['created_at'] = jsonData[i]['created_at'];
+						twitterFeedData['message'] = jsonData[i]['text'];
+						twitterFeedData['author'] = jsonData[i]['user']['screen_name'];
+						twitterFeedData['profile_image_url'] = jsonData[i]['user']['profile_image_url'];
+						twitterFeedData['distance'] = 0;
+						twitterFeed.push(twitterFeedData);
+					}
+					
+                    res.send(twitterFeed);
+					
                 }
             );
         }
@@ -595,7 +620,7 @@ app.get('/profile', function(req, res) {
                             twResult = {
                                 name: userTwitterInfo['name'],
                                 twitter_handle: "@" + userTwitterInfo['screen_name'],
-                                profile_img_url_tw: userTwitterInfo["profile_image_url"],
+                                profile_img_url: userTwitterInfo["profile_image_url"],
                                 feed: userTweets
                             };
 
@@ -642,7 +667,7 @@ app.get('/profile', function(req, res) {
                                 result = {
                                     name: (typeof twResult !== "null") ? twResult['name'] : (typeof fbResult !== "null") ? fbResult["name"] : "",
                                     twitter_handle: (typeof twResult !== "null") ? twResult['twitter_handle'] : "",
-                                    profile_img_url_tw: (typeof twResult !== "null") ? twResult["profile_img_url_tw"] : "",
+                                    profile_img_url_tw: (typeof twResult !== "null") ? twResult["profile_img_url"] : "",
                                     feed: (typeof twResult !== "null") ? twResult["feed"] : []
                                 };
 
