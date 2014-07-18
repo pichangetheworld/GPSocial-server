@@ -609,7 +609,7 @@ app.get('/news_feed', function(req, res){
 	});
 
     //update database with geolocation
-    if (typeof geolat !== "undefined" && typeof geolng !== "undefined") {
+    if (typeof geolat !== "undefined" && geolat !== "" && typeof geolng !== "undefined" && geolng !== "") {
         connection.query("UPDATE users " +
                 "SET GeoLat= '" + geolat + "', " +
                 "GeoLng= '" + geolng + "', " +
@@ -982,9 +982,9 @@ app.get('/profile', function(req, res) {
 		
 	});
 
-
+	console.log(geolat + " " + geolng);
     //update database with geolocation
-    if (typeof geolat !== "undefined" && typeof geolng !== "undefined") {
+    if (typeof geolat !== "undefined" && geolat !== "" && typeof geolng !== "undefined" && geolng !== "") {
         connection.query("UPDATE users " +
             "SET GeoLat= " + geolat + ", " +
             "GeoLng= " + geolng + ", " +
