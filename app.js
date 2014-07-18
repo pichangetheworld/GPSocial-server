@@ -386,9 +386,10 @@ app.post('/authenticate_facebook', function(req, res) {
         "ON DUPLICATE KEY UPDATE " +
         "OAuthToken=VALUES(OAuthToken), OAuthSecret=VALUES(OAuthSecret);";
 
-    uQuery = "INSERT IGNORE INTO users(FacebookId)" +
-    "VALUES ('" + facebookId + "');";
-
+	if (typeof userId !== 'undefined') {
+		uQuery = "INSERT IGNORE INTO users(FacebookId)" +
+		"VALUES ('" + facebookId + "');";
+	}
     connection.query(fbQuery, function(fbErr, fbRows, fbfields) {
         if (fbErr) {
             res.json({success : "false"});
@@ -464,9 +465,10 @@ app.get('/news_feed', function(req, res){
 					jsonData = JSON.parse(data);
 					
 					for (i = 0, iMax = jsonData.length; i < iMax; ++i) {
+						var date = new Date(jsonData[i]['created_at']);
 						twitterFeedData = Object.create(FeedData);
 						twitterFeedData['feed_source'] = 1;
-						twitterFeedData['created_at'] = jsonData[i]['created_at'];
+						twitterFeedData['created_at'] = date.getTime();
 						twitterFeedData['message'] = jsonData[i]['text'];
 						twitterFeedData['author'] = jsonData[i]['user']['screen_name'];
 						twitterFeedData['profile_image_url'] = jsonData[i]['user']['profile_image_url'];
