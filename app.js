@@ -389,7 +389,7 @@ app.post('/authenticate_facebook', function(req, res) {
         "ON DUPLICATE KEY UPDATE " +
         "OAuthToken=VALUES(OAuthToken), OAuthSecret=VALUES(OAuthSecret);";
 
-		uQuery = typeof userId === "undefined" ? "INSERT IGNORE INTO users(FacebookId)" +
+	uQuery = typeof userId === "undefined" ? "INSERT IGNORE INTO users(FacebookId)" +
 		"VALUES ('" + facebookId + "');" :
 		"UPDATE users " +
 		"SET FacebookId = " + facebookId + 
@@ -476,7 +476,7 @@ app.get('/news_feed', function(req, res){
 						twitterFeedData['created_at'] = date.getTime();
 						twitterFeedData['message'] = jsonData[i]['text'];
 						twitterFeedData['author'] = jsonData[i]['user']['screen_name'];
-						twitterFeedData['profile_image_url'] = jsonData[i]['user']['profile_image_url'];
+						twitterFeedData['profile_img_url'] = jsonData[i]['user']['profile_image_url'];
 						twitterFeedData['distance'] = 0;
 						twitterFeed.push(twitterFeedData);
 					}
