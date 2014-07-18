@@ -322,8 +322,11 @@ app.post('/authenticate_twitter', function(req, res) {
         "ON DUPLICATE KEY UPDATE " +
         "OAuthToken=VALUES(OAuthToken), OAuthSecret=VALUES(OAuthSecret);";
 
-    uQuery = "INSERT IGNORE INTO users(TwitterId)" +
-    "VALUES ('" + twitterId + "');";
+    uQuery = typeof userId === "undefined" ? "INSERT IGNORE INTO users(TwitterId)" +
+    "VALUES ('" + twitterId + "');" :
+	"UPDATE users " +
+	"SET TwitterId = " + twitterId + 
+	" WHERE UserId = " + userId + ";";
 
     connection.query(twQuery, function(twErr, twRows, twFields) {
         if (twErr) {
@@ -386,10 +389,12 @@ app.post('/authenticate_facebook', function(req, res) {
         "ON DUPLICATE KEY UPDATE " +
         "OAuthToken=VALUES(OAuthToken), OAuthSecret=VALUES(OAuthSecret);";
 
-	if (typeof userId !== 'undefined') {
-		uQuery = "INSERT IGNORE INTO users(FacebookId)" +
-		"VALUES ('" + facebookId + "');";
-	}
+		uQuery = typeof userId === "undefined" ? "INSERT IGNORE INTO users(FacebookId)" +
+		"VALUES ('" + facebookId + "');" :
+		"UPDATE users " +
+		"SET FacebookId = " + facebookId + 
+		" WHERE UserId = " + userId + ";";
+		
     connection.query(fbQuery, function(fbErr, fbRows, fbfields) {
         if (fbErr) {
             res.json({success : "false"});
