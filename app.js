@@ -90,7 +90,7 @@ function getFeedDataFromFacebookStatus(fbStatus) {
 	fbFeedData['created_at'] = date.getTime();
 	fbFeedData['message'] = fbStatus['message'];
 	fbFeedData['author'] = fbStatus['from']['name'];
-	//fbFeedData['profile_img_url']  = obj['data']['url'];
+	fbFeedData['profile_img_url']  = "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQ75YdOPgXP0AkDYooNoTuaPFd_B6Oqu97Wd4Ohhkq9_ZEdWMJY0Q";
 	fbFeedData['distance'] = 0;
 	return fbFeedData;
 	/*https.get("https://graph.facebook.com/v2.0/" + id + "/picture?redirect=0", function (httpRes) {
@@ -568,7 +568,7 @@ app.get('/news_feed', function(req, res){
 									
 									for (i = 0, iMax = objData.length; i < iMax; ++i) {
 										if (objData[i]['type'] === "status") {
-											facebookFeed.push(objData[i]);
+											facebookFeed.push(getFeedDataFromFacebookStatus(objData[i]));
 										}
 									}
 									feed = aggregateFeedData(twitterFeed, facebookFeed);
@@ -600,7 +600,7 @@ app.get('/news_feed', function(req, res){
 								facebookFeed.push(getFeedDataFromFacebookStatus(objData[i]));
 							}
 						}
-						
+						res.send(facebookFeed);
 					});
 				});
 				
@@ -874,7 +874,6 @@ app.get('/profile', function(req, res) {
 																
 																fbFeed.push(fbFeedData);
 															}
-															console.log (JSON.stringify(result));
 															feed = aggregateFeedData(twResult['feed'], fbFeed);
 															result = {
 																name: (typeof twResult !== "null") ? twResult['name'] : "",
