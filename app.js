@@ -565,14 +565,16 @@ app.get('/news_feed', function(req, res){
 										objData = obj['data'];
 									
 									console.log(objData);
-									
-									for (i = 0, iMax = objData.length; i < iMax; ++i) {
-										if (objData[i]['type'] === "status") {
-											facebookFeed.push(getFeedDataFromFacebookStatus(objData[i]));
-										}
-									}
-									feed = aggregateFeedData(twitterFeed, facebookFeed);
-									res.send(feed);
+									if (typeof objData !== "undefined") {
+    									for (i = 0, iMax = objData.length; i < iMax; ++i) {
+    										if (objData[i]['type'] === "status") {
+    											facebookFeed.push(getFeedDataFromFacebookStatus(objData[i]));
+    										}
+    									}
+                                    }
+    									feed = aggregateFeedData(twitterFeed, facebookFeed);
+    									res.send(feed);
+
 												
 								});
 							});
