@@ -1026,10 +1026,10 @@ app.post('/post_message', function(req, res) {
                     tokenSecret = rows[0].OAuthSecret;
                     console.log("HERE");
                     oauth.post(
-                        'https://api.twitter.com/1.1/statuses/update.json?status=' + encodedMessage,
+                        'https://api.twitter.com/1.1/statuses/update.json',
                         token,
                         tokenSecret,
-                        {"status": encodedMessage},
+                        {"status": message},
                         function (e, data, oRes) {
                             if (e) {
                                 console.error(e);
