@@ -65,6 +65,75 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', routes);
 app.use('/users', users);
 
+//TODO: Put into another module
+function getFeedDataFromTweet (tweet) {
+	var date = new Date(tweet['created_at']),
+		twitterFeedData = Object.create(FeedData);
+		
+	twitterFeedData['feed_source'] = 1;
+	twitterFeedData['created_at'] = date.getTime();
+	twitterFeedData['message'] = tweet['text'];
+	twitterFeedData['author'] = tweet['user']['screen_name'];
+	twitterFeedData['profile_img_url'] = tweet['user']['profile_image_url'];
+	twitterFeedData['distance'] = 0;
+	return twitterFeedData;
+}
+
+//TODO: Put into another module
+function getFeedDataFromFacebookStatus(fbStatus) {
+	var date = new Date(fbStatus['created_time']),
+		fbFeedData = Object.create(FeedData),
+		id = fbStatus['from']['id'];
+		
+
+	fbFeedData['feed_source'] = 2;
+	fbFeedData['created_at'] = date.getTime();
+	fbFeedData['message'] = fbStatus['message'];
+	fbFeedData['author'] = fbStatus['from']['name'];
+	//fbFeedData['profile_img_url']  = obj['data']['url'];
+	fbFeedData['distance'] = 0;
+	return fbFeedData;
+	/*https.get("https://graph.facebook.com/v2.0/" + id + "/picture?redirect=0", function (httpRes) {
+		var output = '';
+		httpRes.on('data', function (chunk) {
+			output += chunk;
+		});
+
+		httpRes.on('end', function () {
+			var obj = JSON.parse(output);
+			fbFeedData['feed_source'] = 2;
+			fbFeedData['created_at'] = date.getTime();
+			fbFeedData['message'] = fbStatus['message'];
+			fbFeedData['author'] = fbStatus['from']['name'];
+			fbFeedData['profile_img_url']  = obj['data']['url'];
+			fbFeedData['distance'] = 0;
+			return fbFeedData;
+		});
+	});*/
+}
+
+function aggregateFeedData (twitterFeed, fbFeed) {
+	var i = 0,
+		iMax = twitterFeed.length,
+		j = 0,
+		jMax = fbFeed.length,
+		feed = [];
+		
+	while (i < twitterFeed.length ||  j < fbFeed.length) {
+		if (j >= fbFeed.length || (i < twitterFeed.length && twitterFeed[i]['created_at'] >= fbFeed[j]['created_at'])) {
+			feed.push(twitterFeed[i]);
+			i++;
+		}
+		else if (i >= twitterFeed.length || (j < fbFeed.length && twitterFeed[i]['created_at'] < fbFeed[j]['created_at'])){
+			feed.push(fbFeed[j]);
+			j++;
+		}
+		
+	}
+	return feed;
+
+}
+
 // test twitter feed get
 app.get('/twitterTest', function (req, res) {
     res.type('application/json');
@@ -439,52 +508,103 @@ app.get('/news_feed', function(req, res){
         geolat = req.query.lat,
 		NUM_OF_TWEETS = 25,
 		twitterFeed = [],
-		twitterFeedData,
 		i,
 		iMax,
-		jsonData;
+		jsonData,
+		options,
+		twToken,
+		twSecret,
+		fbToken,
+		facebookFeed = [],
+		feed = [];
 		
 	res.type("application/json");
 
-	connection.query("SELECT * FROM twitterauth ta INNER JOIN users u ON u.TwitterId = ta.TwitterId WHERE u.UserId = '" + userId + "' LIMIT 1", function (err, rows, fields) {
+	options = {
+		sql: "SELECT * FROM users u LEFT JOIN twitterauth ta ON u.TwitterId = ta.TwitterId  LEFT JOIN facebookauth fb ON u.FacebookId = fb.FacebookId WHERE u.UserId = '" + userId + "' LIMIT 1", 
+		nestTables: true
+	}
+	
+	connection.query(options, function (err, rows) {
 		if (err) {
 			throw err;
 		}
 
         if (rows.length > 0) {
 
-            var token = rows[0].OAuthToken,
-                tokenSecret = rows[0].OAuthSecret;
+			if (rows[0].u.TwitterId !== "null") {
+				twToken = rows[0].ta.OAuthToken;
+				twSecret = rows[0].ta.OAuthSecret;
 
-
-
-            oauth.get(
-                    'https://api.twitter.com/1.1/statuses/home_timeline.json?count=' + NUM_OF_TWEETS,
-                token,
-                tokenSecret,
-                function (e, data, oRes) {
-                    if (e) {
-                        console.error(e);
-                    }
-                    
-					jsonData = JSON.parse(data);
+				oauth.get(
+						'https://api.twitter.com/1.1/statuses/home_timeline.json?count=' + NUM_OF_TWEETS,
+					twToken,
+					twSecret,
+					function (e, data, oRes) {
+						if (e) {
+							console.error(e);
+						}
+						
+						jsonData = JSON.parse(data);
+						
+						for (i = 0, iMax = jsonData.length; i < iMax; ++i) {
+							twitterFeed.push(getFeedDataFromTweet(jsonData[i]));
+						}
+						
+						if (rows[0].u.FacebookId !== "null") {
+							fbToken = rows[0].fb.OAuthToken;
 					
-					for (i = 0, iMax = jsonData.length; i < iMax; ++i) {
-						var date = new Date(jsonData[i]['created_at']);
-						twitterFeedData = Object.create(FeedData);
-						twitterFeedData['feed_source'] = 1;
-						twitterFeedData['created_at'] = date.getTime();
-						twitterFeedData['message'] = jsonData[i]['text'];
-						twitterFeedData['author'] = jsonData[i]['user']['screen_name'];
-						twitterFeedData['profile_img_url'] = jsonData[i]['user']['profile_image_url'];
-						twitterFeedData['distance'] = 0;
-						twitterFeed.push(twitterFeedData);
+							https.get("https://graph.facebook.com/v2.0/me/home?access_token=" + fbToken, function(httpRes) {
+								var output = '';
+								httpRes.on('data', function (chunk) {
+									output += chunk;
+								});
+
+								httpRes.on('end', function() {
+									var obj = JSON.parse(output),
+										objData = obj['data'];
+									
+									console.log(objData);
+									
+									for (i = 0, iMax = objData.length; i < iMax; ++i) {
+										if (objData[i]['type'] === "status") {
+											facebookFeed.push(objData[i]);
+										}
+									}
+									feed = aggregateFeedData(twitterFeed, facebookFeed);
+									res.send(feed);
+												
+								});
+							});
+						}
+						
+						
 					}
-					
-                    res.send(twitterFeed);
-					
-                }
-            );
+				);
+			}
+			else if (rows[0].u.FacebookId !== "null") {
+				fbToken = rows[0].fb.OAuthToken;
+				
+				https.get("https://graph.facebook.com/v2.0/me/home?access_token=" + fbToken, function(httpRes) {
+					var output = '';
+					httpRes.on('data', function (chunk) {
+						output += chunk;
+					});
+
+					httpRes.on('end', function() {
+						var obj = JSON.parse(output),
+							objData = obj['data'];
+						
+						for (i = 0, iMax = objData.length; i < iMax; ++i) {
+							if (objData[i]['type'] === "status") {
+								facebookFeed.push(getFeedDataFromFacebookStatus(objData[i]));
+							}
+						}
+						
+					});
+				});
+				
+			}
         }
 	});
 
@@ -528,6 +648,42 @@ app.get('/facebookProfileTest', function(req, res) {
 });
 
 //FacebookTest
+app.get('/facebookPictureTest', function(req, res) {
+	var userId = req.query.id,
+		options,
+		token;
+	
+	var headers = {
+		"Content-Type" : "application/json"
+	};
+	
+	options = {
+		host: "graph.facebook.com",
+		port: 443,
+		path: "/v2.0/?access_token=CAAEEv1osbPEBABiDyimZCAy3GPdsXPjqEero4fxjpWlUbhz0flAh4jmZCCGkWknSj9OAko6sVTAhlmL7RII2nmFZA6kqQZC4KHs31pBqnJsavZALkaAnU38MZAwGB850UZCrqpMip3Yj9naaNdhGpxzieBNNBfqzIgNdepufYKyaJ5cSseDunnZC",
+		method: "POST",
+		headers: headers
+	};
+	
+	var req = https.request(options, function(httpRes) {
+		var output = '';
+		httpRes.on('data', function (chunk) {
+			output += chunk;
+		});
+
+		httpRes.on('end', function() {
+			var obj = JSON.parse(output);
+			res.send(obj);
+		});
+	});
+	var json = JSON.stringify([{"method":"GET","relative_url":"10154367774970051/picture"},{"method":"GET","relative_url":"658365934252121/picture"}]);
+	console.log(json);
+	req.write("batch=" + json);
+	req.end();
+	
+});
+
+//FacebookTest
 app.get('/facebookNewsFeedTest', function(req, res) {
 	var userId = req.query.id,
 		options,
@@ -552,11 +708,41 @@ app.get('/facebookNewsFeedTest', function(req, res) {
 });
 
 app.get('/users_near_me', function (req, res) {
-	var userId = req.query.id;
+	var userId = req.query.id,
+		results = [],
+		userData,
+		i,
+		iMax,
+		options;
 	
 	res.type('application/json');
 	
-	res.send([
+	options = {
+		sql: "SELECT * FROM users u LEFT JOIN twitterauth ta ON u.TwitterId = ta.TwitterId LEFT JOIN facebookauth fb ON u.FacebookId = fb.FacebookId WHERE UserId <> " + userId + ";",
+		nestTables: true
+	}
+	
+	connection.query(options, function (err, rows) {
+	
+		if (rows.length > 0) {
+			for (i = 0, iMax = rows.length; i < iMax; ++i) {
+				userData = {
+					id: rows[i].u.UserId,
+					user_name: "",
+					lng: rows[i].u.GeoLng,
+					lat: rows[i].u.GeoLat
+				};
+				results.push(userData);
+			}
+			res.send(results);
+		}
+		else {
+			res.send([]);
+		}
+	
+	});
+	
+	/*res.send([
 					{
 					"id": 1,
 					"user_name": "Fred",
@@ -569,7 +755,7 @@ app.get('/users_near_me', function (req, res) {
 					"lng": "43.472803",
 					"lat": "-80.535299"
 					}
-	]);
+	]);*/
 
 });
 
@@ -581,10 +767,14 @@ app.get('/profile', function(req, res) {
 		twResult = null,
 		userTwitterInfo,
 		userTweets,
+		userTweetsFeedData,
         fbResult = null,
 		i,
 		iMax,
-        result;
+        result,
+		feed = [],
+		fbFeedData,
+		fbFeed = [];
 
     res.type('application/json');
 
@@ -620,18 +810,17 @@ app.get('/profile', function(req, res) {
                                 console.error(e);
                             }
                             userTweets = JSON.parse(tweetData);
+							userTweetsFeedData = [];
 
                             for (i = 0, iMax = userTweets.length; i < iMax; ++i) {
-                                userTweets[i].feed_source = 1;
+                                userTweetsFeedData.push(getFeedDataFromTweet(userTweets[i]));
                             }
                             twResult = {
                                 name: userTwitterInfo['name'],
                                 twitter_handle: "@" + userTwitterInfo['screen_name'],
                                 profile_img_url: userTwitterInfo["profile_image_url"],
-                                feed: userTweets
+                                feed: userTweetsFeedData
                             };
-
-                            console.log(userTwitterInfo["profile_image_url"]);
 
                             //TODO: Modularize
                             //facebook
@@ -652,35 +841,68 @@ app.get('/profile', function(req, res) {
                                         httpRes.on('end', function () {
                                             var obj = JSON.parse(output);
                                             fbResult = obj;
-                                            console.log(JSON.stringify(obj));
-                                        });
-                                    });
-									
-									https.get("https://graph.facebook.com/v2.0/me/picture?redirect=0&access_token=" + token, function (httpRes) {
-                                        var output = '';
-                                        httpRes.on('data', function (chunk) {
-                                            output += chunk;
-                                        });
+											
+											https.get("https://graph.facebook.com/v2.0/me/picture?redirect=0&access_token=" + token, function (httpRes) {
+												var output = '';
+												httpRes.on('data', function (chunk) {
+													output += chunk;
+												});
 
-                                        httpRes.on('end', function () {
-                                            var obj = JSON.parse(output);
-                                            fbResult["profile_img_url"] = obj;
-                                            console.log(JSON.stringify(obj));
+												httpRes.on('end', function () {
+													var obj = JSON.parse(output);
+													fbResult["profile_img_url"] = obj['data']['url'];
+													https.get("https://graph.facebook.com/v2.0/me/statuses?access_token=" + token, function (httpRes) {
+														var output = '';
+														httpRes.on('data', function (chunk) {
+															output += chunk;
+														});
+
+														httpRes.on('end', function () {
+															var obj = JSON.parse(output),
+																objData = obj['data'];
+															
+															for (i = 0, iMax = objData.length; i < iMax; ++i) {
+																var date = new Date(objData[i]['updated_time']),
+																fbFeedData = Object.create(FeedData);
+																
+																fbFeedData['feed_source'] = 2;
+																fbFeedData['created_at'] = date.getTime();
+																fbFeedData['message'] = objData[i]['message'];
+																fbFeedData['author'] = objData[i]['from']['name'];
+																fbFeedData['profile_img_url'] = fbResult["profile_img_url"];
+																fbFeedData['distance'] = 0;
+																
+																fbFeed.push(fbFeedData);
+															}
+															console.log (JSON.stringify(result));
+															feed = aggregateFeedData(twResult['feed'], fbFeed);
+															result = {
+																name: (typeof twResult !== "null") ? twResult['name'] : "",
+																twitter_handle: (typeof twResult !== "null") ? twResult['twitter_handle'] : "",
+																profile_img_url: (typeof twResult !== "null") ? twResult["profile_img_url"] : "",
+																feed: feed
+															};
+															res.send(result);
+														});
+													});
+												});
+											});
+											
                                         });
                                     });
 
                                 }
+								else {
+									result = {
+										name: (typeof twResult !== "null") ? twResult['name'] : "",
+										twitter_handle: (typeof twResult !== "null") ? twResult['twitter_handle'] : "",
+										profile_img_url: (typeof twResult !== "null") ? twResult["profile_img_url"] : "",
+										feed: (typeof twResult !== "null") ? twResult["feed"] : []
+									};
+									res.send(result);
+								}
 
-                                result = {
-                                    name: (typeof twResult !== "null") ? twResult['name'] : (typeof fbResult !== "null") ? fbResult["name"] : "",
-                                    twitter_handle: (typeof twResult !== "null") ? twResult['twitter_handle'] : "",
-                                    profile_img_url_tw: (typeof twResult !== "null") ? twResult["profile_img_url"] : "",
-                                    feed: (typeof twResult !== "null") ? twResult["feed"] : []
-                                };
 
-                                console.log(result);
-
-                                res.send(result);
 
                             });
                         }
@@ -688,38 +910,17 @@ app.get('/profile', function(req, res) {
                 }
             );
         }
-	});
+		else {
+			//facebook
+			connection.query("SELECT * FROM facebookauth fb INNER JOIN users u ON u.FacebookId = fb.FacebookId WHERE u.UserId = '" + userId + "' LIMIT 1", function (err, rows, fields) {
+				if (err) {
+					throw err;
+				}
 
-    if (twResult === null) {
-        //facebook
-        connection.query("SELECT * FROM facebookauth fb INNER JOIN users u ON u.FacebookId = fb.FacebookId WHERE u.UserId = '" + userId + "' LIMIT 1", function (err, rows, fields) {
-            if (err) {
-                throw err;
-            }
+				if (rows.length > 0) {
 
-            if (rows.length > 0) {
-
-                var token = rows[0].OAuthToken;
-                https.get("https://graph.facebook.com/v2.0/me?access_token=" + token, function (httpRes) {
-                    var output = '';
-                    httpRes.on('data', function (chunk) {
-                        output += chunk;
-                    });
-
-                    httpRes.on('end', function () {
-                        var obj = JSON.parse(output);
-                        fbResult = obj;
-                        console.log(JSON.stringify(obj));
-                        //aggregates result
-                        result = {
-                            name: (typeof fbResult !== "null") ? fbResult["name"] : "",
-                            twitter_handle: "",
-                            profile_img_url_tw: "",
-                            feed: []
-                        };
-                    });
-					
-					https.get("https://graph.facebook.com/v2.0/me/picture?redirect=0&access_token=" + token, function (httpRes) {
+					var token = rows[0].OAuthToken;
+					https.get("https://graph.facebook.com/v2.0/me?access_token=" + token, function (httpRes) {
 						var output = '';
 						httpRes.on('data', function (chunk) {
 							output += chunk;
@@ -727,17 +928,61 @@ app.get('/profile', function(req, res) {
 
 						httpRes.on('end', function () {
 							var obj = JSON.parse(output);
-							result["profile_img_url"] = obj;
-							
-							res.send(result);
+							fbResult = obj;
+							result = {
+								name: (typeof fbResult !== "null") ? fbResult["name"] : "",
+								twitter_handle: "",
+								feed: []
+							};
 						});
-					});
-					
-                });
+						
+						https.get("https://graph.facebook.com/v2.0/me/picture?redirect=0&access_token=" + token, function (httpRes) {
+							var output = '';
+							httpRes.on('data', function (chunk) {
+								output += chunk;
+							});
 
-            }
-        });
-    }
+							httpRes.on('end', function () {
+								var obj = JSON.parse(output);
+								result["profile_img_url"] = obj['data']['url'];
+								https.get("https://graph.facebook.com/v2.0/me/statuses?access_token=" + token, function (httpRes) {
+									var output = '';
+									httpRes.on('data', function (chunk) {
+										output += chunk;
+									});
+
+									httpRes.on('end', function () {
+										var obj = JSON.parse(output),
+											objData = obj['data'];
+										
+										for (i = 0, iMax = objData.length; i < iMax; ++i) {
+											var date = new Date(objData[i]['updated_time']),
+											fbFeedData = Object.create(FeedData);
+											
+											fbFeedData['feed_source'] = 2;
+											fbFeedData['created_at'] = date.getTime();
+											fbFeedData['message'] = objData[i]['message'];
+											fbFeedData['author'] = objData[i]['from']['name'];
+											fbFeedData['profile_img_url'] = result["profile_img_url"];
+											fbFeedData['distance'] = 0;
+											
+											feed.push(fbFeedData);
+										}
+										result['feed'] = feed;
+										res.send(result);
+									});
+								});
+							});
+						});
+						
+					});
+
+				}
+			});
+		}
+		
+	});
+
 
     //update database with geolocation
     if (typeof geolat !== "undefined" && typeof geolng !== "undefined") {
