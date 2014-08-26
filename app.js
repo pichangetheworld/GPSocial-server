@@ -1049,6 +1049,14 @@ app.post('/post_message', function(req, res) {
 
 	
 });
+
+app.post('/sectorSubmit', function(req, res) {
+
+    res.type('application/json');
+    res.send(req.body);
+
+});
+
 /// catch 404 and forward to error handler
 app.use(function(req, res, next) {
     var err = new Error('Not Found');
